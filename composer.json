@@ -20,7 +20,6 @@
             "Alexdw\\TrumbowygBundle\\" : ""
         }
     },
-    "target-dir" : "Alexdw/TrumbowygBundle",
     "repositories" : [{
     }],
     "minimum-stability": "dev",
