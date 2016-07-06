@@ -1,0 +1,6 @@
+services:
+    alexdw_trumbowyg.form.type:
+        class: "%alexdw_trumbowyg.form.type.class%"
+        arguments: ["@service_container"]
+        tags:
+            - { name: form.type }

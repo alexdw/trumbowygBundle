@@ -1,0 +1,31 @@
+{
+    "name" : "Alexdw/TrumbowygBundle",
+    "description" : "Provides a Trumbowyg integration for you Symfony project",
+    "type" : "symfony-bundle",
+    "authors" : [{
+        "name" : "Alex Martín",
+        "email" : "alex@alexdw.com"
+    }],
+    "keywords" : [
+        "Trumbowyg","wysiwyg", "editor"
+    ],
+    "license" : [
+        "MIT"
+    ],
+    "require" : {
+        
+    },
+    "autoload" : {
+        "psr-0" : {
+            "Company\\DemoBundle" : ""
+        }
+    },
+    "target-dir" : "Company/DemoBundle",
+    "repositories" : [{
+    }],
+    "extra" : {
+    "branch-alias" : {
+            "dev-master" : "some_version-dev"
+        }
+    }
+}
