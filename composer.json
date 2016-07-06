@@ -1,5 +1,5 @@
 {
-    "name" : "alexdw/trumbowygbundle",
+    "name" : "alexdw/trumbowyg-bundle",
     "description" : "Provides a Trumbowyg integration for you Symfony project",
     "type" : "symfony-bundle",
     "authors" : [{
@@ -20,7 +20,7 @@
             "Alexdw\\TrumbowygBundle" : ""
         }
     },
-    "target-dir" : "src",
+    "target-dir" : "Alexdw/TrumbowygBundle",
     "repositories" : [{
     }],
     "minimum-stability": "dev",
