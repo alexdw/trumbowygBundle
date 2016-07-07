@@ -53,9 +53,4 @@ class AlexdwTrumbowygExtension extends Extension
                 ->addTag('form.type', array('alias' => 'trumbowyg'));
         }
     }
-
-    private function getDefaultGroups()
-    {
-        return array();
-    }
 }

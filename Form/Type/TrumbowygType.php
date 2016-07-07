@@ -6,23 +6,19 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Form\DataTransformerInterface;
 
 /**
  * Trumbowyg type.
  */
 class TrumbowygType extends AbstractType
 {
-    protected $container;
-    protected $transformers;
+    protected $config;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct($config)
     {
-        $this->container = $container;
+        $this->config = $config;
     }
 
     /**
@@ -70,35 +66,15 @@ class TrumbowygType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
-            'base_path' => $this->container->getParameter('alexdw_trumbowyg.trumbowyg.base_path'),
-            'svg_path' => $this->container->getParameter('alexdw_trumbowyg.trumbowyg.svg_path'),
-            'language' => $this->container->getParameter('alexdw_trumbowyg.trumbowyg.language'),
-            'btns' => $this->container->getParameter('alexdw_trumbowyg.trumbowyg.btns'),
-            'remove_format_pasted' => $this->container->getParameter('alexdw_trumbowyg.trumbowyg.remove_format_pasted'),
-            'autogrow' => $this->container->getParameter('alexdw_trumbowyg.trumbowyg.autogrow'),
-            'reset_css' => $this->container->getParameter('alexdw_trumbowyg.trumbowyg.reset_css'),
-            'semantic' => $this->container->getParameter('alexdw_trumbowyg.trumbowyg.semantic'),
+            'base_path' => $this->config["base_path"],
+            'svg_path' => $this->config["svg_path"],
+            'language' => $this->config["language"],
+            'btns' => $this->config["btns"],
+            'remove_format_pasted' => $this->config["remove_format_pasted"],
+            'autogrow' => $this->config["autogrow"],
+            'reset_css' => $this->config["reset_css"],
+            'semantic' => $this->config["semantic"],
         ));
-
-        $allowedValues = array(
-        );
-
-        $allowedTypes = array(
-        );
-
-        // BC: Remove version check when support for Symfony <2.6 is dropped.
-        if (Kernel::VERSION_ID >= 20600) {
-            foreach ($allowedValues as $option => $values) {
-                $resolver->setAllowedValues($option, $values);
-            }
-
-            foreach ($allowedTypes as $option => $types) {
-                $resolver->setAllowedTypes($option, $types);
-            }
-        } else {
-            $resolver->setAllowedValues($allowedValues);
-            $resolver->setAllowedTypes($allowedTypes);
-        }
     }
 
     /**

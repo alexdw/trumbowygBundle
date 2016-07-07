@@ -17,16 +17,7 @@ class TrumbowygExtension extends \Twig_Extension
     protected $container;
 
     /**
-     * Asset Base Url
-     *
-     * Used to over ride the asset base url (to not use CDN for instance)
-     *
-     * @var String
-     */
-    protected $baseUrl;
-
-    /**
-     * Initialize tinymce helper
+     * Initialize trumbowyg helper
      *
      * @param ContainerInterface $container
      */

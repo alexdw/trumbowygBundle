@@ -1,9 +1,9 @@
 services:
     alexdw_trumbowyg.form.type:
         class: "%alexdw_trumbowyg.form.type.class%"
-        arguments: ["@service_container"]
+        arguments: ["%alexdw_trumbowyg.config%"]
         tags:
-            - { name: form.type }
+          - { name: form.type }
     alexdw_trumbowyg.twig_extension:
             class: Alexdw\TrumbowygBundle\Twig\TrumbowygExtension
             arguments: ["@service_container"]
