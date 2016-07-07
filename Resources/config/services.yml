@@ -4,3 +4,9 @@ services:
         arguments: ["@service_container"]
         tags:
             - { name: form.type }
+    alexdw_trumbowyg.twig_extension:
+            class: Alexdw\TrumbowygBundle\Twig\TrumbowygExtension
+            arguments: ["@service_container"]
+            public: false
+            tags:
+                - { name: twig.extension }

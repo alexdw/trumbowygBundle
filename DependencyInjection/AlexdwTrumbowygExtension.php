@@ -26,6 +26,8 @@ class AlexdwTrumbowygExtension extends Extension
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
 
+        $container->setParameter('alexdw_trumbowyg.config', $config);
+
         $container->setParameter('alexdw_trumbowyg.form.type.class', $config['class']);
         $container->setParameter('twig.form.resources', array_merge(
             $container->getParameter('twig.form.resources'),
@@ -42,6 +44,7 @@ class AlexdwTrumbowygExtension extends Extension
         $container->setParameter('alexdw_trumbowyg.trumbowyg.autogrow', $config['autogrow']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.reset_css', $config['reset_css']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.semantic', $config['semantic']);
+        $container->setParameter('alexdw_trumbowyg.trumbowyg.include_jquery', $config['include_jquery']);
 
         if (Kernel::VERSION_ID < 30000) {
             // BC - Add alias if Symfony < 3.0

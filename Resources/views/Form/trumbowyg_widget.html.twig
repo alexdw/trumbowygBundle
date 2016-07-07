@@ -1,22 +1,5 @@
 {% block trumbowyg_widget %}
     {% spaceless %}
-        <style ></style>
         <textarea {{ block('widget_attributes') }}>{{ value }}</textarea>
-        <script type="text/javascript" src="{{ asset(base_path ~ 'trumbowyg.js') }}"></script>
-        <script type="text/javascript" src="{{ asset(base_path ~ 'langs/'~ language ~ ".min.js") }}"></script>
-        <link rel="stylesheet" type="text/css" href="{{ asset(base_path ~ 'ui/trumbowyg.css') }}" />
-        <script type="text/javascript">
-            $(function(){
-                $.trumbowyg.svgPath  ="{{ svg_path }}";
-                $("#{{ id }}").trumbowyg({
-                    lang : "{{ language }}",
-                    autogrow: {{ autogrow }},
-                    semantic: {{ semantic }},
-                    resetCss: {{ reset_css }},
-                    removeformatPasted : {{ remove_format_pasted }},
-                    btns : {{ btns | json_encode | raw }}
-                });
-            });
-        </script>
     {% endspaceless %}
 {% endblock trumbowyg_widget %}

@@ -67,121 +67,62 @@ class TrumbowygExtension extends \Twig_Extension
     public function getFunctions()
     {
         return array(
-            'trumbowyg_init' => new \Twig_SimpleFunction(
-                'trumbowyg_init',
-                array($this, 'trumbowygInit'),
+            'trumbowyg_js' => new \Twig_SimpleFunction(
+                'trumbowyg_js',
+                array($this, 'trumbowygJs'),
+                array('is_safe' => array('html'))
+            ),
+            'trumbowyg_css' => new \Twig_SimpleFunction(
+                'trumbowyg_css',
+                array($this, 'trumbowygCss'),
                 array('is_safe' => array('html'))
             ),
         );
     }
 
     /**
-     * Trumbowyg initializations
-     *
+     * Trumbowyg JS init
      * @param array $options
-     *
      * @return string
      */
-    public function trumbowygInit($options = array())
+    public function trumbowygJs($options = array())
     {
-        $config = $this->getParameter('stfalcon_tinymce.config');
+        $config = $this->getParameter('alexdw_trumbowyg.config');
         $config = array_merge_recursive($config, $options);
 
-        $this->baseUrl = (!isset($config['base_url']) ? null : $config['base_url']);
+        $formCollector = $this->getService("data_collector.form");
+        $forms = $formCollector->getData()["forms"];
 
-        // Asset package name
-        $assetPackageName = (!isset($config['asset_package_name']) ? null : $config['asset_package_name']);
-        unset($config['asset_package_name']);
+        $trumbowygFields = array();
 
-        /** @var $assets \Symfony\Component\Templating\Helper\CoreAssetsHelper */
-        $assets = $this->getService('assets.packages');
-
-        // Get path to tinymce script for the jQuery version of the editor
-        if ($config['tinymce_jquery']) {
-            $config['jquery_script_url'] = $assets->getUrl(
-                $this->baseUrl.'bundles/stfalcontinymce/vendor/tinymce/tinymce.jquery.min.js',
-                $assetPackageName
-            );
-        }
-
-        // Get local button's image
-        foreach ($config['tinymce_buttons'] as &$customButton) {
-            if ($customButton['image']) {
-                $customButton['image'] = $this->getAssetsUrl($customButton['image']);
-            } else {
-                unset($customButton['image']);
-            }
-
-            if ($customButton['icon']) {
-                $customButton['icon'] = $this->getAssetsUrl($customButton['icon']);
-            } else {
-                unset($customButton['icon']);
-            }
-        }
-
-        // Update URL to external plugins
-        foreach ($config['external_plugins'] as &$extPlugin) {
-            $extPlugin['url'] = $this->getAssetsUrl($extPlugin['url']);
-        }
-
-        // If the language is not set in the config...
-        if (!isset($config['language']) || empty($config['language'])) {
-            // get it from the request
-            $config['language'] = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
-        }
-
-        $config['language'] = LocaleHelper::getLanguage($config['language']);
-
-        $langDirectory = __DIR__.'/../../Resources/public/vendor/tinymce/langs/';
-
-        // A language code coming from the locale may not match an existing language file
-        if (!file_exists($langDirectory.$config['language'].'.js')) {
-            unset($config['language']);
-        }
-
-        if (isset($config['language']) && $config['language']) {
-            // TinyMCE does not allow to set different languages to each instance
-            foreach ($config['theme'] as $themeName => $themeOptions) {
-                $config['theme'][$themeName]['language'] = $config['language'];
-            }
-        }
-
-        if (isset($config['theme']) && $config['theme']) {
-            // Parse the content_css of each theme so we can use 'asset[path/to/asset]' in there
-            foreach ($config['theme'] as $themeName => $themeOptions) {
-                if (isset($themeOptions['content_css'])) {
-                    // As there may be multiple CSS Files specified we need to parse each of them individually
-                    $cssFiles = explode(',', $themeOptions['content_css']);
-
-                    foreach ($cssFiles as $idx => $file) {
-                        $cssFiles[$idx] = $this->getAssetsUrl(trim($file)); // we trim to be sure we get the file without spaces.
-                    }
-
-                    // After parsing we add them together again.
-                    $config['theme'][$themeName]['content_css'] = implode(',', $cssFiles);
+        foreach ($forms as $form){
+            foreach ($form["children"] as $item){
+                if($item["type"]=="trumbowyg"){
+                    $trumbowygFields[$item["id"]] = array_merge($config, $item["passed_options"]);
                 }
             }
         }
 
-        $tinymceConfiguration = preg_replace(
-            array(
-                '/"file_browser_callback":"([^"]+)"\s*/',
-                '/"file_picker_callback":"([^"]+)"\s*/',
-                '/"paste_preprocess":"([^"]+)"\s*/',
-            ),
-            array(
-                'file_browser_callback:$1',
-                'file_picker_callback:$1',
-                '"paste_preprocess":$1',
-            ),
-            json_encode($config)
-        );
-
-        return $this->getService('templating')->render('AleexdwTrunmbowygBundle:Script:init.html.twig', array(
-            'trumbowyg_config'     => $tinymceConfiguration,
+        return $this->getService('templating')->render('AlexdwTrumbowygBundle:Init:js.html.twig', array(
+            'svg_path'     => $config['svg_path'],
+            'base_path'     => $config['base_path'],
+            'language'     => $config['language'],
+            'fields'     => $trumbowygFields,
             'include_jquery'     => $config['include_jquery'],
-            'asset_package_name' => $assetPackageName,
-            'base_url'           => $this->baseUrl,
+        ));
+
+
+    }
+    /**
+     * Trumbowyg JS init
+     * @param array $options
+     * @return string
+     */
+    public function trumbowygCss()
+    {
+        $config = $this->getParameter('alexdw_trumbowyg.config');
+        return $this->getService('templating')->render('AlexdwTrumbowygBundle:Init:css.html.twig', array(
+            'base_path'     => $config['base_path'],
         ));
     }
 
@@ -195,24 +136,4 @@ class TrumbowygExtension extends \Twig_Extension
         return 'alexdw_trumbowyg';
     }
 
-    /**
-     * Get url from config string
-     *
-     * @param string $inputUrl
-     *
-     * @return string
-     */
-    protected function getAssetsUrl($inputUrl)
-    {
-        /** @var $assets \Symfony\Component\Templating\Helper\CoreAssetsHelper */
-        $assets = $this->getService('assets.packages');
-
-        $url = preg_replace('/^asset\[(.+)\]$/i', '$1', $inputUrl);
-
-        if ($inputUrl !== $url) {
-            return $assets->getUrl($this->baseUrl.$url);
-        }
-
-        return $inputUrl;
-    }
 }
