@@ -66,7 +66,7 @@ $builder->add('field', TrumbowygType::class, array(
     'reset_css' => true,`
             //...
 ));
-``
+```
 
 ## Default configuration
 
