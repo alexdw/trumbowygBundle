@@ -100,6 +100,7 @@ class TrumbowygExtension extends \Twig_Extension
             'language'     => $config['language'],
             'fields'     => $trumbowygFields,
             'include_jquery'     => $config['include_jquery'],
+            'jquery_path'     => $config['jquery_path'],
         ));
 
 

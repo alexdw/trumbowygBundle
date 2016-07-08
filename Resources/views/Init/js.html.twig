@@ -1,4 +1,6 @@
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+{% if include_jquery %}
+    <script src="{{ jquery_path }}"></script>
+{% endif %}
 <script type="text/javascript" src="{{ asset(base_path ~ 'trumbowyg.js') }}"></script>
 <script type="text/javascript" src="{{ asset(base_path ~ 'langs/'~ language ~ ".min.js") }}"></script>
 <link rel="stylesheet" type="text/css" href="{{ asset(base_path ~ 'ui/trumbowyg.css') }}"/>
@@ -7,13 +9,12 @@
     $(function () {
         $.trumbowyg.svgPath = "{{ svg_path }}";
         {% for key,field in fields %}
-
             $("#{{ key }}").trumbowyg({
                 lang: "{{ field.language }}",
-                autogrow: {{ field.autogrow }},
-                semantic: {{ field.semantic }},
-                resetCss: {{ field.reset_css }},
-                removeformatPasted: {{ field.remove_format_pasted }},
+                autogrow: {{ field.autogrow ? "true":"false"}},
+                semantic: {{ field.semantic ? "true":"false"}},
+                resetCss: {{ field.reset_css ? "true":"false"}},
+                removeformatPasted: {{ field.remove_format_pasted ? "true":"false"}},
                 btns: {{ field.btns | json_encode | raw }}
             });
 

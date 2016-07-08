@@ -45,6 +45,7 @@ class AlexdwTrumbowygExtension extends Extension
         $container->setParameter('alexdw_trumbowyg.trumbowyg.reset_css', $config['reset_css']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.semantic', $config['semantic']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.include_jquery', $config['include_jquery']);
+        $container->setParameter('alexdw_trumbowyg.trumbowyg.jquery_path', $config['jquery_path']);
 
         if (Kernel::VERSION_ID < 30000) {
             // BC - Add alias if Symfony < 3.0
