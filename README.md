@@ -50,6 +50,23 @@ You can also override the default configuration by passing an option like this:
 ```twig
     {{ trumbowyg_css() }}
 ```
+##Usage
+
+```php
+// Symfony 2.7 and previous versions
+$builder->add('field', 'trumbowyg', array(
+        'reset_css' => true,
+        //...
+));
+
+// Symfony 2.8 and newer versions
+use Alexdw\TrumbowygBundle\Form\Type\TrumbowygType;
+
+$builder->add('field', TrumbowygType::class, array(
+    'reset_css' => true,`
+            //...
+));
+``
 
 ## Default configuration
 
