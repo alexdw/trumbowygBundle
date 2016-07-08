@@ -23,55 +23,23 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->scalarNode('class')->defaultValue('Alexdw\TrumbowygBundle\Form\Type\TrumbowygType')->end()
-            ->end()
-            ->children()
                 ->booleanNode('include_jquery')->defaultFalse()->end()
-            ->end()
-            ->children()
-                ->scalarNode('base_path')
-                    ->defaultValue('/bundles/alexdwtrumbowyg/')
-                    ->info('The base URL path used to load trumbowyg files from.')
-                ->end()
-            ->end()
-            ->children()
-                ->scalarNode('svg_path')
-                    ->defaultValue('/bundles/alexdwtrumbowyg/ui/icons.svg')
-                    ->info('The base URL path used to load trumbowyg icons from.')
-                ->end()
-            ->end()
-            ->children()
-                ->scalarNode('language')
-                    ->defaultValue('en')
-                    ->info('The language used by trumbowyg.')
-                ->end()
-            ->end()
-            ->children()
-                ->scalarNode('remove_format_pasted')
-                    ->defaultValue("false")
-                    ->info('Remove format pasted.')
-                ->end()
-            ->end()
-            ->children()
-                ->scalarNode('autogrow')
-                    ->defaultValue("false")
-                    ->info('The text editon zone can extend itself.')
-                ->end()
-            ->end()
-            ->children()
-                ->scalarNode('reset_css')
-                    ->defaultValue("false")
-                    ->info('Reset the css in the editor.')
-                ->end()
-            ->end()
-            ->children()
-                ->scalarNode('semantic')
-                    ->defaultValue("false")
-                    ->info('Generates a better, more semantic oriented HTML.')
-                ->end()
-            ->end()
-            ->children()
-                ->variableNode('btns')
-                ->defaultValue(array(
+                ->scalarNode('base_path')->defaultValue('/bundles/alexdwtrumbowyg/')->end()
+                ->scalarNode('svg_path')->defaultValue('/bundles/alexdwtrumbowyg/ui/icons.svg')->end()
+                ->scalarNode('language')->defaultValue('en')->end()
+                ->booleanNode('remove_format_pasted')->defaultFalse()->end()
+                ->booleanNode('autogrow')->defaultFalse()->end()
+                ->booleanNode('reset_css')->defaultFalse()->end()
+                ->booleanNode('semantic')->defaultFalse()->end()
+                ->variableNode('btns')->defaultValue($this->defaultConfig())->end()
+            ->end();
+
+        return $treeBuilder;
+    }
+
+    private function defaultConfig()
+    {
+        return array(
                     array("viewHTML"),
                     array("formatting"),
                     "btnGrp-semantic",
@@ -83,11 +51,6 @@ class Configuration implements ConfigurationInterface
                     array("horizontalRule"),
                     array("removeformat"),
                     array("fullscreen")
-                ))
-                ->info('The default toolbar displayed on the editor.')
-                ->end()
-            ->end();
-
-        return $treeBuilder;
+        );
     }
 }
