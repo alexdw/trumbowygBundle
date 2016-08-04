@@ -63,7 +63,7 @@ $builder->add('field', 'trumbowyg', array(
 use Alexdw\TrumbowygBundle\Form\Type\TrumbowygType;
 
 $builder->add('field', TrumbowygType::class, array(
-    'reset_css' => true,`
+    'reset_css' => true,
             //...
 ));
 ```
