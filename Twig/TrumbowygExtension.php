@@ -88,8 +88,14 @@ class TrumbowygExtension extends \Twig_Extension
 
         foreach ($forms as $form){
             foreach ($form["children"] as $item){
-                if($item["type"]=="trumbowyg"){
-                    $trumbowygFields[$item["id"]] = array_merge($config, $item["passed_options"]);
+                if(method_exists('Symfony\Component\Form\AbstractType', 'getBlockPrefix')){
+                    if($item['type_class']=="Alexdw\TrumbowygBundle\Form\Type\TrumbowygType"){
+                        $trumbowygFields[$item["id"]] = array_merge($config, $item["passed_options"]);
+                    }
+                }else{
+                    if($item['type']=="trumbowyg"){
+                        $trumbowygFields[$item["id"]] = array_merge($config, $item["passed_options"]);
+                    }
                 }
             }
         }
