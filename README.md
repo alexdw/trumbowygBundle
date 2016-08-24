@@ -72,7 +72,7 @@ $builder->add('field', TrumbowygType::class, array(
 
 ```yaml
     alexdw_trumbowyg:
-      base_path: /bundles/alexdwtrumbowyg
+      base_path: /bundles/alexdwtrumbowyg/
       svg_path: /bundles/alexdwtrumbowyg/ui/icons.svg
       language: en
       autogrow: false
