@@ -82,7 +82,7 @@ class TrumbowygExtension extends \Twig_Extension
     public function trumbowygJs($options = array())
     {
         $config = $this->getParameter('alexdw_trumbowyg.config');
-        $config = array_merge_recursive($config, $options);
+        $config = array_merge($config, $options);
 
 
         return $this->getService('templating')->render('AlexdwTrumbowygBundle:Init:js.html.twig', array(
