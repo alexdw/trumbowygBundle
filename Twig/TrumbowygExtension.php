@@ -3,6 +3,9 @@
 namespace Alexdw\TrumbowygBundle\Twig;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Form\FormFactory;
+use Symfony\Component\Form\FormRegistry;
+use Symfony\Component\Form\ResolvedFormTypeFactory;
 
 /**
  * Twig Extension for Trumbowyg support.
@@ -81,24 +84,11 @@ class TrumbowygExtension extends \Twig_Extension
         $config = $this->getParameter('alexdw_trumbowyg.config');
         $config = array_merge_recursive($config, $options);
 
-        $formCollector = $this->getService("data_collector.form");
-        $forms = $formCollector->getData()["forms"];
-
-        $trumbowygFields = array();
-
-        foreach ($forms as $form){
-            foreach ($form["children"] as $item){
-                if($item["type"]=="trumbowyg"){
-                    $trumbowygFields[$item["id"]] = array_merge($config, $item["passed_options"]);
-                }
-            }
-        }
 
         return $this->getService('templating')->render('AlexdwTrumbowygBundle:Init:js.html.twig', array(
             'svg_path'     => $config['svg_path'],
             'base_path'     => $config['base_path'],
             'language'     => $config['language'],
-            'fields'     => $trumbowygFields,
             'include_jquery'     => $config['include_jquery'],
             'jquery_path'     => $config['jquery_path'],
         ));
