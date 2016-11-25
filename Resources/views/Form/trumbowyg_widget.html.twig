@@ -1,5 +1,21 @@
 {% block trumbowyg_widget %}
     {% spaceless %}
         <textarea {{ block('widget_attributes') }}>{{ value }}</textarea>
+        <script type="text/javascript">
+            trumbowyg_instances = ( typeof trumbowyg_instances != 'undefined' && trumbowyg_instances instanceof Array ) ? trumbowyg_instances : []
+            var options = {};
+            options['lang'] = '{{ language }}';
+            options['removeformatPasted'] = '{{ remove_format_pasted }}';
+            options['autogrow'] = '{{ autogrow ? "true":"false"}}';
+            options['semantic'] = '{{ semantic ? "true":"false"}}';
+            options['resetCss'] = '{{ reset_css ? "true":"false"}}';
+            options['removeformatPasted'] = '{{ remove_format_pasted ? "true":"false"}}';
+            options['btns'] = {{ btns | json_encode | raw }};
+
+            var instance_data = {id: '{{ id }}', options: options};
+
+            trumbowyg_instances.push(instance_data);
+
+        </script>
     {% endspaceless %}
 {% endblock trumbowyg_widget %}

@@ -7,7 +7,9 @@
     {% spaceless %}
     $(function () {
         $.trumbowyg.svgPath = "{{ svg_path }}";
-        $(".trumbowyg").trumbowyg();
+        trumbowyg_instances.forEach(function(item) {
+            $("#" + item.id).trumbowyg(item.options);
+        })
     });
     {% endspaceless %}
 </script>
