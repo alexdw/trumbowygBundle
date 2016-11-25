@@ -3,9 +3,6 @@
 namespace Alexdw\TrumbowygBundle\Twig;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Form\FormFactory;
-use Symfony\Component\Form\FormRegistry;
-use Symfony\Component\Form\ResolvedFormTypeFactory;
 
 /**
  * Twig Extension for Trumbowyg support.
