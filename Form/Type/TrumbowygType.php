@@ -34,6 +34,8 @@ class TrumbowygType extends AbstractType
             ->setAttribute('autogrow', $options['autogrow'])
             ->setAttribute('reset_css', $options['reset_css'])
             ->setAttribute('semantic', $options['semantic'])
+            ->setAttribute('plugins', $options['plugins'])
+            ->setAttribute('btns_def', $options['btns_def'])
         ;
     }
 
@@ -45,11 +47,13 @@ class TrumbowygType extends AbstractType
         $view->vars['base_path'] = $options['base_path'];
         $view->vars['svg_path'] = $options['svg_path'];
         $view->vars['language'] = $options['language'];
+        $view->vars['btns_def'] = $options['btns_def'];
         $view->vars['btns'] = $options['btns'];
         $view->vars['remove_format_pasted'] = $options['remove_format_pasted'];
         $view->vars['autogrow'] = $options['autogrow'];
         $view->vars['reset_css'] = $options['reset_css'];
         $view->vars['semantic'] = $options['semantic'];
+        $view->vars['plugins'] = $options['plugins'];
     }
 
     /**
@@ -69,11 +73,13 @@ class TrumbowygType extends AbstractType
             'base_path' => $this->config["base_path"],
             'svg_path' => $this->config["svg_path"],
             'language' => $this->config["language"],
+            'btns_def' => $this->config["btns_def"],
             'btns' => $this->config["btns"],
             'remove_format_pasted' => $this->config["remove_format_pasted"],
             'autogrow' => $this->config["autogrow"],
             'reset_css' => $this->config["reset_css"],
             'semantic' => $this->config["semantic"],
+            'plugins' => $this->config["plugins"],
         ));
     }
 
