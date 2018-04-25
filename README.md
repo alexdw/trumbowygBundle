@@ -5,7 +5,7 @@ This bundle provide an easy integration for [Trumbowyg Editor](https://alex-d.gi
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/89a48061-bd00-48dd-a00c-91322f99233f/small.png)](https://insight.sensiolabs.com/projects/89a48061-bd00-48dd-a00c-91322f99233f)
 
 
-##Installation
+## Installation
 
 ```
  php composer.phar require alexdw/trumbowyg-bundle="0.9"
@@ -50,7 +50,7 @@ You can also override the default configuration by passing an option like this:
 ```twig
     {{ trumbowyg_css() }}
 ```
-##Usage
+## Usage
 
 ```php
 // Symfony 2.7 and previous versions
