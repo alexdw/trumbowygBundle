@@ -1,6 +1,6 @@
-#TrumbowygBundle
+# TrumbowygBundle
 
-This bundle provide an easy integration for [Trumbowyg Editor](https://alex-d.github.io/Trumbowyg/) in your Symfony 2 Project. 
+This bundle provide an easy integration for [Trumbowyg Editor](https://alex-d.github.io/Trumbowyg/) in your Symfony Project. 
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/89a48061-bd00-48dd-a00c-91322f99233f/small.png)](https://insight.sensiolabs.com/projects/89a48061-bd00-48dd-a00c-91322f99233f)
 
