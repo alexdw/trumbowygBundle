@@ -1,5 +1,5 @@
 /**
- * Trumbowyg v2.1.0 - A lightweight WYSIWYG editor
+ * Trumbowyg v2.10.0 - A lightweight WYSIWYG editor
  * Trumbowyg core file
  * ------------------------
  * @link http://alex-d.github.io/Trumbowyg
@@ -62,7 +62,8 @@ jQuery.trumbowyg = {
             description: 'Description',
             title: 'Title',
             text: 'Text',
-            target: 'Target'
+            target: 'Target',
+            width: 'Width'
         }
     },
 
@@ -70,12 +71,66 @@ jQuery.trumbowyg = {
     plugins: {},
 
     // SVG Path globally
-    svgPath: null
+    svgPath: null,
+
+    hideButtonTexts: null
 };
+
+// Makes default options read-only
+Object.defineProperty(jQuery.trumbowyg, 'defaultOptions', {
+    value: {
+        lang: 'en',
+
+        fixedBtnPane: false,
+        fixedFullWidth: false,
+        autogrow: false,
+        autogrowOnEnter: false,
+        imageWidthModalEdit: false,
+
+        prefix: 'trumbowyg-',
+
+        semantic: true,
+        resetCss: false,
+        removeformatPasted: false,
+        tagsToRemove: [],
+        btns: [
+            ['viewHTML'],
+            ['undo', 'redo'], // Only supported in Blink browsers
+            ['formatting'],
+            ['strong', 'em', 'del'],
+            ['superscript', 'subscript'],
+            ['link'],
+            ['insertImage'],
+            ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+            ['unorderedList', 'orderedList'],
+            ['horizontalRule'],
+            ['removeformat'],
+            ['fullscreen']
+        ],
+        // For custom button definitions
+        btnsDef: {},
+
+        inlineElementsSelector: 'a,abbr,acronym,b,caption,cite,code,col,dfn,dir,dt,dd,em,font,hr,i,kbd,li,q,span,strikeout,strong,sub,sup,u',
+
+        pasteHandlers: [],
+
+        // imgDblClickHandler: default is defined in constructor
+
+        plugins: {},
+        urlProtocol: false,
+        minimalLinks: false
+    },
+    writable: false,
+    enumerable: true,
+    configurable: false
+});
 
 
 (function (navigator, window, document, $) {
     'use strict';
+
+    var CONFIRM_EVENT = 'tbwconfirm',
+        CANCEL_EVENT = 'tbwcancel';
 
     $.fn.trumbowyg = function (options, params) {
         var trumbowygDataName = 'trumbowyg';
@@ -114,9 +169,13 @@ jQuery.trumbowyg = {
 
                     // Enable/disable
                     case 'enable':
-                        return t.toggleDisable(false);
+                        return t.setDisabled(false);
                     case 'disable':
-                        return t.toggleDisable(true);
+                        return t.setDisabled(true);
+
+                    // Toggle
+                    case 'toggle':
+                        return t.toggle();
 
                     // Destroy
                     case 'destroy':
@@ -140,7 +199,8 @@ jQuery.trumbowyg = {
     // @param: editorElem is the DOM element
     var Trumbowyg = function (editorElem, options) {
         var t = this,
-            trumbowygIconsId = 'trumbowyg-icons';
+            trumbowygIconsId = 'trumbowyg-icons',
+            $trumbowyg = $.trumbowyg;
 
         // Get the document of the element. It use to makes the plugin
         // compatible on iframes.
@@ -153,40 +213,50 @@ jQuery.trumbowyg = {
         options = options || {};
 
         // Localization management
-        if (options.lang != null || $.trumbowyg.langs[options.lang] != null) {
-            t.lang = $.extend(true, {}, $.trumbowyg.langs.en, $.trumbowyg.langs[options.lang]);
+        if (options.lang != null || $trumbowyg.langs[options.lang] != null) {
+            t.lang = $.extend(true, {}, $trumbowyg.langs.en, $trumbowyg.langs[options.lang]);
         } else {
-            t.lang = $.trumbowyg.langs.en;
+            t.lang = $trumbowyg.langs.en;
         }
 
+        t.hideButtonTexts = $trumbowyg.hideButtonTexts != null ? $trumbowyg.hideButtonTexts : options.hideButtonTexts;
+
         // SVG path
-        var svgPathOption = $.trumbowyg.svgPath != null ? $.trumbowyg.svgPath : options.svgPath;
+        var svgPathOption = $trumbowyg.svgPath != null ? $trumbowyg.svgPath : options.svgPath;
         t.hasSvg = svgPathOption !== false;
-        t.svgPath = !!t.doc.querySelector('base') ? window.location : '';
+        t.svgPath = !!t.doc.querySelector('base') ? window.location.href.split('#')[0] : '';
         if ($('#' + trumbowygIconsId, t.doc).length === 0 && svgPathOption !== false) {
             if (svgPathOption == null) {
-                try {
-                    throw new Error();
-                } catch (e) {
-                    var stackLines = e.stack.split('\n');
-
-                    for (var i in stackLines) {
-                        if (!stackLines[i].match(/http[s]?:\/\//)) {
-                            continue;
-                        }
-                        svgPathOption = stackLines[Number(i)].match(/((http[s]?:\/\/.+\/)([^\/]+\.js)):/)[1].split('/');
-                        svgPathOption.pop();
-                        svgPathOption = svgPathOption.join('/') + '/ui/icons.svg';
-                        break;
+                // Hack to get svgPathOption based on trumbowyg.js path
+                var scriptElements = document.getElementsByTagName('script');
+                for (var i = 0; i < scriptElements.length; i += 1) {
+                    var source = scriptElements[i].src;
+                    var matches = source.match('trumbowyg(\.min)?\.js');
+                    if (matches != null) {
+                        svgPathOption = source.substring(0, source.indexOf(matches[0])) + 'ui/icons.svg';
                     }
+                }
+                if (svgPathOption == null) {
+                    console.warn('You must define svgPath: https://goo.gl/CfTY9U'); // jshint ignore:line
                 }
             }
 
             var div = t.doc.createElement('div');
             div.id = trumbowygIconsId;
             t.doc.body.insertBefore(div, t.doc.body.childNodes[0]);
-            $.get(svgPathOption, function (data) {
-                div.innerHTML = new XMLSerializer().serializeToString(data.documentElement);
+            $.ajax({
+                async: true,
+                type: 'GET',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                dataType: 'xml',
+                crossDomain: true,
+                url: svgPathOption,
+                data: null,
+                beforeSend: null,
+                complete: null,
+                success: function (data) {
+                    div.innerHTML = new XMLSerializer().serializeToString(data.documentElement);
+                }
             });
         }
 
@@ -199,9 +269,9 @@ jQuery.trumbowyg = {
          *      foo: {}
          * is equivalent to :
          *      foo: {
-             *          fn: 'foo',
-             *          title: this.lang.foo
-             *      }
+         *          fn: 'foo',
+         *          title: this.lang.foo
+         *      }
          */
         var h = t.lang.header, // Header translation
             isBlinkFunction = function () {
@@ -251,10 +321,12 @@ jQuery.trumbowyg = {
             },
 
             bold: {
-                key: 'B'
+                key: 'B',
+                tag: 'b'
             },
             italic: {
-                key: 'I'
+                key: 'I',
+                tag: 'i'
             },
             underline: {
                 tag: 'u'
@@ -334,94 +406,27 @@ jQuery.trumbowyg = {
         };
 
         // Defaults Options
-        t.o = $.extend(true, {}, {
-            lang: 'en',
+        t.o = $.extend(true, {}, $trumbowyg.defaultOptions, options);
+        if (!t.o.hasOwnProperty('imgDblClickHandler')) {
+            t.o.imgDblClickHandler = t.getDefaultImgDblClickHandler();
+        }
 
-            fixedBtnPane: false,
-            fixedFullWidth: false,
-            autogrow: false,
-
-            prefix: 'trumbowyg-',
-
-            semantic: true,
-            resetCss: false,
-            removeformatPasted: false,
-            tagsToRemove: [],
-
-            btnsGrps: {
-                design: ['bold', 'italic', 'underline', 'strikethrough'],
-                semantic: ['strong', 'em', 'del'],
-                justify: ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
-                lists: ['unorderedList', 'orderedList']
-            },
-            btns: [
-                ['viewHTML'],
-                ['undo', 'redo'],
-                ['formatting'],
-                'btnGrp-semantic',
-                ['superscript', 'subscript'],
-                ['link'],
-                ['insertImage'],
-                'btnGrp-justify',
-                'btnGrp-lists',
-                ['horizontalRule'],
-                ['removeformat'],
-                ['fullscreen']
-            ],
-            // For custom button definitions
-            btnsDef: {},
-
-            inlineElementsSelector: 'a,abbr,acronym,b,caption,cite,code,col,dfn,dir,dt,dd,em,font,hr,i,kbd,li,q,span,strikeout,strong,sub,sup,u',
-
-            pasteHandlers: [],
-
-            imgDblClickHandler: function () {
-                var $img = $(this),
-                    src = $img.attr('src'),
-                    base64 = '(Base64)';
-
-                if (src.indexOf('data:image') === 0) {
-                    src = base64;
-                }
-
-                t.openModalInsert(t.lang.insertImage, {
-                    url: {
-                        label: 'URL',
-                        value: src,
-                        required: true
-                    },
-                    alt: {
-                        label: t.lang.description,
-                        value: $img.attr('alt')
-                    }
-                }, function (v) {
-                    if (v.src !== base64) {
-                        $img.attr({
-                            src: v.src
-                        });
-                    }
-                    $img.attr({
-                        alt: v.alt
-                    });
-                    return true;
-                });
-                return false;
-            },
-
-            plugins: {}
-        }, options);
+        t.urlPrefix = t.setupUrlPrefix();
 
         t.disabled = t.o.disabled || (editorElem.nodeName === 'TEXTAREA' && editorElem.disabled);
 
         if (options.btns) {
             t.o.btns = options.btns;
         } else if (!t.o.semantic) {
-            t.o.btns[4] = 'btnGrp-design';
+            t.o.btns[3] = ['bold', 'italic', 'underline', 'strikethrough'];
         }
 
         $.each(t.o.btnsDef, function (btnName, btnDef) {
             t.addBtnDef(btnName, btnDef);
         });
+
+        // put this here in the event it would be merged in with options
+        t.eventNamespace = 'trumbowyg-event';
 
         // Keyboard shortcuts are load in this array
         t.keys = [];
@@ -433,19 +438,33 @@ jQuery.trumbowyg = {
         // Admit multiple paste handlers
         t.pasteHandlers = [].concat(t.o.pasteHandlers);
 
+        // Check if browser is IE
+        t.isIE = (navigator.userAgent.indexOf('MSIE') !== -1 || navigator.appVersion.indexOf('Trident/') !== -1);
+
         t.init();
     };
 
     Trumbowyg.prototype = {
+        DEFAULT_SEMANTIC_MAP: {
+            'b': 'strong',
+            'i': 'em',
+            's': 'del',
+            'strike': 'del',
+            'div': 'p'
+        },
+
         init: function () {
             var t = this;
             t.height = t.$ta.height();
 
             t.initPlugins();
 
-            // Disable image resize in Firefox
-            t.doc.execCommand('enableObjectResizing', false, false);
-            t.doc.execCommand('defaultParagraphSeparator', false, 'p');
+            try {
+                // Disable image resize, try-catch for old IE
+                t.doc.execCommand('enableObjectResizing', false, false);
+                t.doc.execCommand('defaultParagraphSeparator', false, 'p');
+            } catch (e) {
+            }
 
             t.buildEditor();
             t.buildBtnPane();
@@ -456,7 +475,7 @@ jQuery.trumbowyg = {
 
             setTimeout(function () {
                 if (t.disabled) {
-                    t.toggleDisable(true);
+                    t.setDisabled(true);
                 }
                 t.$c.trigger('tbwinit');
             });
@@ -464,6 +483,18 @@ jQuery.trumbowyg = {
 
         addBtnDef: function (btnName, btnDef) {
             this.btnsDef[btnName] = btnDef;
+        },
+
+        setupUrlPrefix: function () {
+            var protocol = this.o.urlProtocol;
+            if (!protocol) {
+                return;
+            }
+
+            if (typeof(protocol) !== 'string') {
+                return 'https://';
+            }
+            return /:\/\/$/.test(protocol) ? protocol : protocol + '://';
         },
 
         buildEditor: function () {
@@ -521,6 +552,10 @@ jQuery.trumbowyg = {
                 t.$ed.attr('placeholder', t.$c.attr('placeholder'));
             }
 
+            if (t.$c.is('[spellcheck]')) {
+                t.$ed.attr('spellcheck', t.$c.attr('spellcheck'));
+            }
+
             if (t.o.resetCss) {
                 t.$ed.addClass(prefix + 'reset-css');
             }
@@ -533,55 +568,102 @@ jQuery.trumbowyg = {
 
             t.semanticCode();
 
+            if (t.o.autogrowOnEnter) {
+                t.$ed.addClass(prefix + 'autogrow-on-enter');
+            }
 
-            t._ctrl = false;
+            var ctrl = false,
+                composition = false,
+                debounceButtonPaneStatus,
+                updateEventName = 'keyup';
+
             t.$ed
                 .on('dblclick', 'img', t.o.imgDblClickHandler)
                 .on('keydown', function (e) {
-                    t._composition = (e.which === 229);
-
-                    if (e.ctrlKey) {
-                        t._ctrl = true;
-                        var k = t.keys[String.fromCharCode(e.which).toUpperCase()];
+                    if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                        ctrl = true;
+                        var key = t.keys[String.fromCharCode(e.which).toUpperCase()];
 
                         try {
-                            t.execCmd(k.fn, k.param);
+                            t.execCmd(key.fn, key.param);
                             return false;
                         } catch (c) {
                         }
                     }
                 })
-                .on('keyup', function (e) {
-                    if (e.which >= 37 && e.which <= 40) {
+                .on('compositionstart compositionupdate', function () {
+                    composition = true;
+                })
+                .on(updateEventName + ' compositionend', function (e) {
+                    if (e.type === 'compositionend') {
+                        composition = false;
+                    } else if (composition) {
                         return;
                     }
 
-                    if (e.ctrlKey && (e.which === 89 || e.which === 90)) {
+                    var keyCode = e.which;
+
+                    if (keyCode >= 37 && keyCode <= 40) {
+                        return;
+                    }
+
+                    if ((e.ctrlKey || e.metaKey) && (keyCode === 89 || keyCode === 90)) {
                         t.$c.trigger('tbwchange');
-                    } else if (!t._ctrl && e.which !== 17 && !t._composition) {
-                        t.semanticCode(false, e.which === 13);
+                    } else if (!ctrl && keyCode !== 17) {
+                        var compositionEndIE = t.isIE ? e.type === 'compositionend' : true;
+                        t.semanticCode(false, compositionEndIE && keyCode === 13);
                         t.$c.trigger('tbwchange');
+                    } else if (typeof e.which === 'undefined') {
+                        t.semanticCode(false, false, true);
                     }
 
                     setTimeout(function () {
-                        t._ctrl = false;
-                    }, 200);
+                        ctrl = false;
+                    }, 50);
                 })
-                .on('mouseup keydown keyup', function () {
-                    t.updateButtonPaneStatus();
+                .on('mouseup keydown keyup', function (e) {
+                    if ((!e.ctrlKey && !e.metaKey) || e.altKey) {
+                        setTimeout(function () { // "hold on" to the ctrl key for 50ms
+                            ctrl = false;
+                        }, 50);
+                    }
+                    clearTimeout(debounceButtonPaneStatus);
+                    debounceButtonPaneStatus = setTimeout(function () {
+                        t.updateButtonPaneStatus();
+                    }, 50);
                 })
                 .on('focus blur', function (e) {
                     t.$c.trigger('tbw' + e.type);
                     if (e.type === 'blur') {
                         $('.' + prefix + 'active-button', t.$btnPane).removeClass(prefix + 'active-button ' + prefix + 'active');
                     }
+                    if (t.o.autogrowOnEnter) {
+                        if (t.autogrowOnEnterDontClose) {
+                            return;
+                        }
+                        if (e.type === 'focus') {
+                            t.autogrowOnEnterWasFocused = true;
+                            t.autogrowEditorOnEnter();
+                        }
+                        else if (!t.o.autogrow) {
+                            t.$ed.css({height: t.$ed.css('min-height')});
+                            t.$c.trigger('tbwresize');
+                        }
+                    }
                 })
                 .on('cut', function () {
-                    t.$c.trigger('tbwchange');
+                    setTimeout(function () {
+                        t.semanticCode(false, true);
+                        t.$c.trigger('tbwchange');
+                    }, 0);
                 })
                 .on('paste', function (e) {
                     if (t.o.removeformatPasted) {
                         e.preventDefault();
+
+                        if (window.getSelection && window.getSelection().deleteFromDocument) {
+                            window.getSelection().deleteFromDocument();
+                        }
 
                         try {
                             // IE
@@ -594,6 +676,7 @@ jQuery.trumbowyg = {
                                 // IE 11
                                 t.doc.getSelection().getRangeAt(0).insertNode(t.doc.createTextNode(text));
                             }
+                            t.$c.trigger('tbwchange', e);
                         } catch (d) {
                             // Not IE
                             t.execCmd('insertText', (e.originalEvent || e).clipboardData.getData('text/plain'));
@@ -606,24 +689,44 @@ jQuery.trumbowyg = {
                     });
 
                     setTimeout(function () {
-                        if (t.o.semantic) {
-                            t.semanticCode(false, true);
-                        } else {
-                            t.syncCode();
-                        }
+                        t.semanticCode(false, true);
                         t.$c.trigger('tbwpaste', e);
                     }, 0);
                 });
-            t.$ta.on('keyup paste', function () {
-                t.$c.trigger('tbwchange');
-            });
 
-            $(t.doc).on('keydown', function (e) {
-                if (e.which === 27) {
+            t.$ta
+                .on('keyup', function () {
+                    t.$c.trigger('tbwchange');
+                })
+                .on('paste', function () {
+                    setTimeout(function () {
+                        t.$c.trigger('tbwchange');
+                    }, 0);
+                });
+
+            t.$box.on('keydown', function (e) {
+                if (e.which === 27 && $('.' + prefix + 'modal-box', t.$box).length === 1) {
                     t.closeModal();
                     return false;
                 }
             });
+        },
+
+        //autogrow when entering logic
+        autogrowEditorOnEnter: function () {
+            var t = this;
+            t.$ed.removeClass('autogrow-on-enter');
+            var oldHeight = t.$ed[0].clientHeight;
+            t.$ed.height('auto');
+            var totalHeight = t.$ed[0].scrollHeight;
+            t.$ed.addClass('autogrow-on-enter');
+            if (oldHeight !== totalHeight) {
+                t.$ed.height(oldHeight);
+                setTimeout(function () {
+                    t.$ed.css({height: totalHeight});
+                    t.$c.trigger('tbwresize');
+                }, 0);
+            }
         },
 
 
@@ -636,36 +739,26 @@ jQuery.trumbowyg = {
                 class: prefix + 'button-pane'
             });
 
-            $.each(t.o.btns, function (i, btnGrps) {
-                // Managment of group of buttons
-                try {
-                    var b = btnGrps.split('btnGrp-');
-                    if (b[1] != null) {
-                        btnGrps = t.o.btnsGrps[b[1]];
-                    }
-                } catch (c) {
-                }
-
-                if (!$.isArray(btnGrps)) {
-                    btnGrps = [btnGrps];
+            $.each(t.o.btns, function (i, btnGrp) {
+                if (!$.isArray(btnGrp)) {
+                    btnGrp = [btnGrp];
                 }
 
                 var $btnGroup = $('<div/>', {
-                    class: prefix + 'button-group ' + ((btnGrps.indexOf('fullscreen') >= 0) ? prefix + 'right' : '')
+                    class: prefix + 'button-group ' + ((btnGrp.indexOf('fullscreen') >= 0) ? prefix + 'right' : '')
                 });
-                $.each(btnGrps, function (i, btn) {
+                $.each(btnGrp, function (i, btn) {
                     try { // Prevent buildBtn error
-                        var $item;
-
                         if (t.isSupportedBtn(btn)) { // It's a supported button
-                            $item = t.buildBtn(btn);
+                            $btnGroup.append(t.buildBtn(btn));
                         }
-
-                        $btnGroup.append($item);
                     } catch (c) {
                     }
                 });
-                $btnPane.append($btnGroup);
+
+                if ($btnGroup.html().trim().length > 0) {
+                    $btnPane.append($btnGroup);
+                }
             });
 
             t.$box.prepend($btnPane);
@@ -678,12 +771,15 @@ jQuery.trumbowyg = {
                 prefix = t.o.prefix,
                 btn = t.btnsDef[btnName],
                 isDropdown = btn.dropdown,
+                hasIcon = btn.hasIcon != null ? btn.hasIcon : true,
                 textDef = t.lang[btnName] || btnName,
 
                 $btn = $('<button/>', {
                     type: 'button',
-                    class: prefix + btnName + '-button ' + (btn.class || ''),
-                    html: t.hasSvg ? '<svg><use xlink:href="' + t.svgPath + '#' + prefix + (btn.ico || btnName).replace(/([A-Z]+)/g, '-$1').toLowerCase() + '"/></svg>' : '',
+                    class: prefix + btnName + '-button ' + (btn.class || '') + (!hasIcon ? ' ' + prefix + 'textual-button' : ''),
+                    html: t.hasSvg && hasIcon ?
+                        '<svg><use xlink:href="' + t.svgPath + '#' + prefix + (btn.ico || btnName).replace(/([A-Z]+)/g, '-$1').toLowerCase() + '"/></svg>' :
+                        t.hideButtonTexts ? '' : (btn.text || btn.title || t.lang[btnName] || btnName),
                     title: (btn.title || btn.text || textDef) + ((btn.key) ? ' (Ctrl + ' + btn.key + ')' : ''),
                     tabindex: -1,
                     mousedown: function () {
@@ -691,11 +787,13 @@ jQuery.trumbowyg = {
                             $('body', t.doc).trigger('mousedown');
                         }
 
-                        if (t.$btnPane.hasClass(prefix + 'disable') && !$(this).hasClass(prefix + 'active') && !$(this).hasClass(prefix + 'not-disable')) {
+                        if ((t.$btnPane.hasClass(prefix + 'disable') || t.$box.hasClass(prefix + 'disabled')) &&
+                            !$(this).hasClass(prefix + 'active') &&
+                            !$(this).hasClass(prefix + 'not-disable')) {
                             return false;
                         }
 
-                        t.execCmd((isDropdown ? 'dropdown' : false) || btn.fn || btnName, btn.param || btnName, btn.forceCss || false);
+                        t.execCmd((isDropdown ? 'dropdown' : false) || btn.fn || btnName, btn.param || btnName, btn.forceCss);
 
                         return false;
                     }
@@ -704,10 +802,11 @@ jQuery.trumbowyg = {
             if (isDropdown) {
                 $btn.addClass(prefix + 'open-dropdown');
                 var dropdownPrefix = prefix + 'dropdown',
-                    $dropdown = $('<div/>', { // the dropdown
-                        class: dropdownPrefix + '-' + btnName + ' ' + dropdownPrefix + ' ' + prefix + 'fixed-top',
-                        'data-dropdown': btnName
-                    });
+                    dropdownOptions = { // the dropdown
+                        class: dropdownPrefix + '-' + btnName + ' ' + dropdownPrefix + ' ' + prefix + 'fixed-top'
+                    };
+                dropdownOptions['data-' + dropdownPrefix] = btnName;
+                var $dropdown = $('<div/>', dropdownOptions);
                 $.each(isDropdown, function (i, def) {
                     if (t.btnsDef[def] && t.isSupportedBtn(def)) {
                         $dropdown.append(t.buildSubBtn(def));
@@ -732,7 +831,8 @@ jQuery.trumbowyg = {
         buildSubBtn: function (btnName) {
             var t = this,
                 prefix = t.o.prefix,
-                btn = t.btnsDef[btnName];
+                btn = t.btnsDef[btnName],
+                hasIcon = btn.hasIcon != null ? btn.hasIcon : true;
 
             if (btn.key) {
                 t.keys[btn.key] = {
@@ -746,13 +846,13 @@ jQuery.trumbowyg = {
             return $('<button/>', {
                 type: 'button',
                 class: prefix + btnName + '-dropdown-button' + (btn.ico ? ' ' + prefix + btn.ico + '-button' : ''),
-                html: t.hasSvg ? '<svg><use xlink:href="' + t.svgPath + '#' + prefix + (btn.ico || btnName).replace(/([A-Z]+)/g, '-$1').toLowerCase() + '"/></svg>' + (btn.text || btn.title || t.lang[btnName] || btnName) : '',
+                html: t.hasSvg && hasIcon ? '<svg><use xlink:href="' + t.svgPath + '#' + prefix + (btn.ico || btnName).replace(/([A-Z]+)/g, '-$1').toLowerCase() + '"/></svg>' + (btn.text || btn.title || t.lang[btnName] || btnName) : (btn.text || btn.title || t.lang[btnName] || btnName),
                 title: ((btn.key) ? ' (Ctrl + ' + btn.key + ')' : null),
                 style: btn.style || null,
                 mousedown: function () {
                     $('body', t.doc).trigger('mousedown');
 
-                    t.execCmd(btn.fn || btnName, btn.param || btnName, btn.forceCss || false);
+                    t.execCmd(btn.fn || btnName, btn.param || btnName, btn.forceCss);
 
                     return false;
                 }
@@ -772,9 +872,6 @@ jQuery.trumbowyg = {
             var t = this;
             t.$overlay = $('<div/>', {
                 class: t.o.prefix + 'overlay'
-            }).css({
-                top: t.$btnPane.outerHeight(),
-                height: (t.$ed.outerHeight() + 1) + 'px'
             }).appendTo(t.$box);
             return t.$overlay;
         },
@@ -803,7 +900,7 @@ jQuery.trumbowyg = {
             t.isFixed = false;
 
             $(window)
-                .on('scroll resize', function () {
+                .on('scroll.' + t.eventNamespace + ' resize.' + t.eventNamespace, function () {
                     if (!$box) {
                         return;
                     }
@@ -848,7 +945,7 @@ jQuery.trumbowyg = {
         },
 
         // Disable editor
-        toggleDisable: function (disable) {
+        setDisabled: function (disable) {
             var t = this,
                 prefix = t.o.prefix;
 
@@ -866,13 +963,12 @@ jQuery.trumbowyg = {
         // Destroy the editor
         destroy: function () {
             var t = this,
-                prefix = t.o.prefix,
-                height = t.height;
+                prefix = t.o.prefix;
 
             if (t.isTextarea) {
                 t.$box.after(
                     t.$ta
-                        .css({height: height})
+                        .css({height: ''})
                         .val(t.html())
                         .removeClass(prefix + 'textarea')
                         .show()
@@ -880,9 +976,10 @@ jQuery.trumbowyg = {
             } else {
                 t.$box.after(
                     t.$ed
-                        .css({height: height})
+                        .css({height: ''})
                         .removeClass(prefix + 'editor')
                         .removeAttr('contenteditable')
+                        .removeAttr('dir')
                         .html(t.html())
                         .show()
                 );
@@ -895,6 +992,8 @@ jQuery.trumbowyg = {
             t.$box.remove();
             t.$c.removeData('trumbowyg');
             $('body').removeClass(prefix + 'body-fullscreen');
+            t.$c.trigger('tbwclose');
+            $(window).off('scroll.' + t.eventNamespace + ' resize.' + t.eventNamespace);
         },
 
 
@@ -909,7 +1008,13 @@ jQuery.trumbowyg = {
         toggle: function () {
             var t = this,
                 prefix = t.o.prefix;
+
+            if (t.o.autogrowOnEnter) {
+                t.autogrowOnEnterDontClose = !t.$box.hasClass(prefix + 'editor-hidden');
+            }
+
             t.semanticCode(false, true);
+
             setTimeout(function () {
                 t.doc.activeElement.blur();
                 t.$box.toggleClass(prefix + 'editor-hidden ' + prefix + 'editor-visible');
@@ -920,6 +1025,10 @@ jQuery.trumbowyg = {
                 } else {
                     t.$ta.removeAttr('tabindex');
                 }
+
+                if (t.o.autogrowOnEnter && !t.autogrowOnEnterDontClose) {
+                    t.autogrowEditorOnEnter();
+                }
             }, 0);
         },
 
@@ -928,7 +1037,7 @@ jQuery.trumbowyg = {
             var t = this,
                 d = t.doc,
                 prefix = t.o.prefix,
-                $dropdown = $('[data-dropdown=' + name + ']', t.$box),
+                $dropdown = $('[data-' + prefix + 'dropdown=' + name + ']', t.$box),
                 $btn = $('.' + prefix + name + '-button', t.$btnPane),
                 show = $dropdown.is(':hidden');
 
@@ -946,10 +1055,12 @@ jQuery.trumbowyg = {
 
                 $(window).trigger('scroll');
 
-                $('body', d).on('mousedown', function () {
-                    $('.' + prefix + 'dropdown', d).hide();
-                    $('.' + prefix + 'active', d).removeClass(prefix + 'active');
-                    $('body', d).off('mousedown');
+                $('body', d).on('mousedown.' + t.eventNamespace, function (e) {
+                    if (!$dropdown.is(e.target)) {
+                        $('.' + prefix + 'dropdown', t.$box).hide();
+                        $('.' + prefix + 'active', t.$btnPane).removeClass(prefix + 'active');
+                        $('body', d).off('mousedown.' + t.eventNamespace);
+                    }
                 });
             }
         },
@@ -958,23 +1069,31 @@ jQuery.trumbowyg = {
         // HTML Code management
         html: function (html) {
             var t = this;
+
             if (html != null) {
                 t.$ta.val(html);
                 t.syncCode(true);
+                t.$c.trigger('tbwchange');
                 return t;
             }
+
             return t.$ta.val();
         },
         syncTextarea: function () {
             var t = this;
-            t.$ta.val(t.$ed.text().trim().length > 0 || t.$ed.find('hr,img,embed,input').length > 0 ? t.$ed.html() : '');
+            t.$ta.val(t.$ed.text().trim().length > 0 || t.$ed.find('hr,img,embed,iframe,input').length > 0 ? t.$ed.html() : '');
         },
         syncCode: function (force) {
             var t = this;
             if (!force && t.$ed.is(':visible')) {
                 t.syncTextarea();
             } else {
-                t.$ed.html(t.$ta.val());
+                // wrap the content in a div it's easier to get the innerhtml
+                var html = $('<div>').html(t.$ta.val());
+                //scrub the html before loading into the doc
+                var safe = $('<div>').append(html);
+                $(t.o.tagsToRemove.join(','), safe).remove();
+                t.$ed.html(safe.contents().html());
             }
 
             if (t.o.autogrow) {
@@ -984,22 +1103,31 @@ jQuery.trumbowyg = {
                     t.$c.trigger('tbwresize');
                 }
             }
+            if (t.o.autogrowOnEnter) {
+                // t.autogrowEditorOnEnter();
+                t.$ed.height('auto');
+                var totalheight = t.autogrowOnEnterWasFocused ? t.$ed[0].scrollHeight : t.$ed.css('min-height');
+                if (totalheight !== t.$ta.css('height')) {
+                    t.$ed.css({height: totalheight});
+                    t.$c.trigger('tbwresize');
+                }
+            }
         },
 
         // Analyse and update to semantic code
         // @param force : force to sync code from textarea
         // @param full  : wrap text nodes in <p>
-        semanticCode: function (force, full) {
+        // @param keepRange  : leave selection range as it is
+        semanticCode: function (force, full, keepRange) {
             var t = this;
             t.saveRange();
             t.syncCode(force);
 
-            $(t.o.tagsToRemove.join(','), t.$ed).remove();
-
             if (t.o.semantic) {
-                t.semanticTag('b', 'strong');
-                t.semanticTag('i', 'em');
-                t.semanticTag('strike', 'del');
+                t.semanticTag('b');
+                t.semanticTag('i');
+                t.semanticTag('s');
+                t.semanticTag('strike');
 
                 if (full) {
                     var inlineElementsSelector = t.o.inlineElementsSelector,
@@ -1013,7 +1141,7 @@ jQuery.trumbowyg = {
                     // Wrap groups of inline elements in paragraphs (recursive)
                     var wrapInlinesInParagraphsFrom = function ($from) {
                         if ($from.length !== 0) {
-                            var $finalParagraph = $from.nextUntil(blockElementsSelector).andSelf().wrapAll('<p/>').parent(),
+                            var $finalParagraph = $from.nextUntil(blockElementsSelector).addBack().wrapAll('<p/>').parent(),
                                 $nextElement = $finalParagraph.nextAll(inlineElementsSelector).first();
                             $finalParagraph.next('br').remove();
                             wrapInlinesInParagraphsFrom($nextElement);
@@ -1021,7 +1149,7 @@ jQuery.trumbowyg = {
                     };
                     wrapInlinesInParagraphsFrom(t.$ed.children(inlineElementsSelector).first());
 
-                    t.semanticTag('div', 'p', true);
+                    t.semanticTag('div', true);
 
                     // Unwrap paragraphs content, containing nothing usefull
                     t.$ed.find('p').filter(function () {
@@ -1039,13 +1167,25 @@ jQuery.trumbowyg = {
                     t.$ed.find('p:empty').remove();
                 }
 
-                t.restoreRange();
+                if (!keepRange) {
+                    t.restoreRange();
+                }
 
                 t.syncTextarea();
             }
         },
 
-        semanticTag: function (oldTag, newTag, copyAttributes) {
+        semanticTag: function (oldTag, copyAttributes) {
+            var newTag;
+
+            if (this.o.semantic != null && typeof this.o.semantic === 'object' && this.o.semantic.hasOwnProperty(oldTag)) {
+                newTag = this.o.semantic[oldTag];
+            } else if (this.o.semantic === true && this.DEFAULT_SEMANTIC_MAP.hasOwnProperty(oldTag)) {
+                newTag = this.DEFAULT_SEMANTIC_MAP[oldTag];
+            } else {
+                return;
+            }
+
             $(oldTag, this.$ed).each(function () {
                 var $oldTag = $(this);
                 $oldTag.wrap('<' + newTag + '/>');
@@ -1063,6 +1203,7 @@ jQuery.trumbowyg = {
             var t = this,
                 documentSelection = t.doc.getSelection(),
                 node = documentSelection.focusNode,
+                text = new XMLSerializer().serializeToString(documentSelection.getRangeAt(0).cloneContents()),
                 url,
                 title,
                 target;
@@ -1073,46 +1214,84 @@ jQuery.trumbowyg = {
 
             if (node && node.nodeName === 'A') {
                 var $a = $(node);
+                text = $a.text();
                 url = $a.attr('href');
-                title = $a.attr('title');
-                target = $a.attr('target');
+                if (!t.o.minimalLinks) {
+                    title = $a.attr('title');
+                    target = $a.attr('target');
+                }
                 var range = t.doc.createRange();
                 range.selectNode(node);
+                documentSelection.removeAllRanges();
                 documentSelection.addRange(range);
             }
 
             t.saveRange();
 
-            t.openModalInsert(t.lang.createLink, {
+            var options = {
                 url: {
                     label: 'URL',
                     required: true,
                     value: url
                 },
-                title: {
-                    label: t.lang.title,
-                    value: title
-                },
                 text: {
                     label: t.lang.text,
-                    value: t.getRangeText()
-                },
-                target: {
-                    label: t.lang.target,
-                    value: target
+                    value: text
                 }
-            }, function (v) { // v is value
-                var link = $(['<a href="', v.url, '">', v.text, '</a>'].join(''));
-                if (v.title.length > 0) {
-                    link.attr('title', v.title);
+            };
+            if (!t.o.minimalLinks) {
+                Object.assign(options, {
+                    title: {
+                        label: t.lang.title,
+                        value: title
+                    },
+                    target: {
+                        label: t.lang.target,
+                        value: target
+                    }
+                });
+            }
+
+            t.openModalInsert(t.lang.createLink, options, function (v) { // v is value
+                var url = t.prependUrlPrefix(v.url);
+                if (!url.length) {
+                    return false;
                 }
-                if (v.target.length > 0) {
-                    link.attr('target', v.target);
+
+                var link = $(['<a href="', v.url, '">', v.text || v.url, '</a>'].join(''));
+
+                if (!t.o.minimalLinks) {
+                    if (v.title.length > 0) {
+                        link.attr('title', v.title);
+                    }
+                    if (v.target.length > 0) {
+                        link.attr('target', v.target);
+                    }
                 }
                 t.range.deleteContents();
                 t.range.insertNode(link[0]);
+                t.syncCode();
+                t.$c.trigger('tbwchange');
                 return true;
             });
+        },
+        prependUrlPrefix: function (url) {
+            var t = this;
+            if (!t.urlPrefix) {
+                return url;
+            }
+
+            const VALID_LINK_PREFIX = /^([a-z][-+.a-z0-9]*:|\/|#)/i;
+            if (VALID_LINK_PREFIX.test(url)) {
+                return url;
+            }
+
+            const SIMPLE_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (SIMPLE_EMAIL_REGEX.test(url)) {
+                return 'mailto:' + url;
+            }
+
+            return t.urlPrefix + url;
         },
         unlink: function () {
             var t = this,
@@ -1127,6 +1306,7 @@ jQuery.trumbowyg = {
                 if (node && node.nodeName === 'A') {
                     var range = t.doc.createRange();
                     range.selectNode(node);
+                    documentSelection.removeAllRanges();
                     documentSelection.addRange(range);
                 }
             }
@@ -1135,7 +1315,8 @@ jQuery.trumbowyg = {
         insertImage: function () {
             var t = this;
             t.saveRange();
-            t.openModalInsert(t.lang.insertImage, {
+
+            var options = {
                 url: {
                     label: 'URL',
                     required: true
@@ -1144,9 +1325,26 @@ jQuery.trumbowyg = {
                     label: t.lang.description,
                     value: t.getRangeText()
                 }
-            }, function (v) { // v are values
+            };
+
+            if (t.o.imageWidthModalEdit) {
+                options.width = {};
+            }
+
+            t.openModalInsert(t.lang.insertImage, options, function (v) { // v are values
                 t.execCmd('insertImage', v.url);
-                $('img[src="' + v.url + '"]:not([alt])', t.$box).attr('alt', v.alt);
+                var $img = $('img[src="' + v.url + '"]:not([alt])', t.$box);
+                $img.attr('alt', v.alt);
+
+                if (t.o.imageWidthModalEdit) {
+                    $img.attr({
+                        width: v.width
+                    });
+                }
+
+                t.syncCode();
+                t.$c.trigger('tbwchange');
+
                 return true;
             });
         },
@@ -1177,7 +1375,10 @@ jQuery.trumbowyg = {
                 t.$ed.focus();
             }
 
-            t.doc.execCommand('styleWithCSS', false, forceCss || false);
+            try {
+                t.doc.execCommand('styleWithCSS', false, forceCss || false);
+            } catch (c) {
+            }
 
             try {
                 t[cmd + skipTrumbowyg](param);
@@ -1187,7 +1388,7 @@ jQuery.trumbowyg = {
                 } catch (e2) {
                     if (cmd === 'insertHorizontalRule') {
                         param = undefined;
-                    } else if (cmd === 'formatBlock' && (navigator.userAgent.indexOf('MSIE') !== -1 || navigator.appVersion.indexOf('Trident/') !== -1)) {
+                    } else if (cmd === 'formatBlock' && t.isIE) {
                         param = '<' + param + '>';
                     }
 
@@ -1214,6 +1415,9 @@ jQuery.trumbowyg = {
             if ($('.' + prefix + 'modal-box', t.$box).length > 0) {
                 return false;
             }
+            if (t.o.autogrowOnEnter) {
+                t.autogrowOnEnterDontClose = true;
+            }
 
             t.saveRange();
             t.showOverlay();
@@ -1230,7 +1434,7 @@ jQuery.trumbowyg = {
 
             // Click on overlay close modal by cancelling them
             t.$overlay.one('click', function () {
-                $modal.trigger('tbwcancel');
+                $modal.trigger(CANCEL_EVENT);
                 return false;
             });
 
@@ -1240,12 +1444,17 @@ jQuery.trumbowyg = {
                 html: content
             })
                 .on('submit', function () {
-                    $modal.trigger('tbwconfirm');
+                    $modal.trigger(CONFIRM_EVENT);
                     return false;
                 })
                 .on('reset', function () {
-                    $modal.trigger('tbwcancel');
+                    $modal.trigger(CANCEL_EVENT);
                     return false;
+                })
+                .on('submit reset', function () {
+                    if (t.o.autogrowOnEnter) {
+                        t.autogrowOnEnterDontClose = false;
+                    }
                 });
 
 
@@ -1307,12 +1516,12 @@ jQuery.trumbowyg = {
             t.$overlay.off();
 
             // Find the modal box
-            var $mb = $('.' + prefix + 'modal-box', t.$box);
+            var $modalBox = $('.' + prefix + 'modal-box', t.$box);
 
-            $mb.animate({
-                top: '-' + $mb.height()
+            $modalBox.animate({
+                top: '-' + $modalBox.height()
             }, 100, function () {
-                $mb.parent().remove();
+                $modalBox.parent().remove();
                 t.hideOverlay();
             });
 
@@ -1323,15 +1532,21 @@ jQuery.trumbowyg = {
             var t = this,
                 prefix = t.o.prefix,
                 lg = t.lang,
-                html = '',
-                CONFIRM_EVENT = 'tbwconfirm';
+                html = '';
 
             $.each(fields, function (fieldName, field) {
-                var l = field.label,
-                    n = field.name || fieldName;
+                var l = field.label || fieldName,
+                    n = field.name || fieldName,
+                    a = field.attributes || {};
 
-                html += '<label><input type="' + (field.type || 'text') + '" name="' + n + '" value="' + (field.value || '').replace(/"/g, '&quot;') + '"><span class="' + prefix + 'input-infos"><span>' +
-                    ((!l) ? (lg[fieldName] ? lg[fieldName] : fieldName) : (lg[l] ? lg[l] : l)) +
+                var attr = Object.keys(a).map(function (prop) {
+                    return prop + '="' + a[prop] + '"';
+                }).join(' ');
+
+                html += '<label><input type="' + (field.type || 'text') + '" name="' + n + '"' +
+                    (field.type === 'checkbox' && field.value ? ' checked="checked"' : ' value="' + (field.value || '').replace(/"/g, '&quot;')) +
+                    '"' + attr + '><span class="' + prefix + 'input-infos"><span>' +
+                    (lg[l] ? lg[l] : l) +
                     '</span></span></label>';
             });
 
@@ -1342,15 +1557,27 @@ jQuery.trumbowyg = {
                         values = {};
 
                     $.each(fields, function (fieldName, field) {
-                        var $field = $('input[name="' + fieldName + '"]', $form);
+                        var n = field.name || fieldName;
 
-                        values[fieldName] = $.trim($field.val());
+                        var $field = $('input[name="' + n + '"]', $form),
+                            inputType = $field.attr('type');
 
+                        switch (inputType.toLowerCase()) {
+                            case 'checkbox':
+                                values[n] = $field.is(':checked');
+                                break;
+                            case 'radio':
+                                values[n] = $field.filter(':checked').val();
+                                break;
+                            default:
+                                values[n] = $.trim($field.val());
+                                break;
+                        }
                         // Validate value
-                        if (field.required && values[fieldName] === '') {
+                        if (field.required && values[n] === '') {
                             valid = false;
                             t.addErrorOnModalField($field, t.lang.required);
-                        } else if (field.pattern && !field.pattern.test(values[fieldName])) {
+                        } else if (field.pattern && !field.pattern.test(values[n])) {
                             valid = false;
                             t.addErrorOnModalField($field, field.patternError);
                         }
@@ -1367,7 +1594,7 @@ jQuery.trumbowyg = {
                         }
                     }
                 })
-                .one('tbwcancel', function () {
+                .one(CANCEL_EVENT, function () {
                     $(this).off(CONFIRM_EVENT);
                     t.closeModal();
                 });
@@ -1392,6 +1619,61 @@ jQuery.trumbowyg = {
                 );
         },
 
+        getDefaultImgDblClickHandler: function () {
+            var t = this;
+
+            return function () {
+                var $img = $(this),
+                    src = $img.attr('src'),
+                    base64 = '(Base64)';
+
+                if (src.indexOf('data:image') === 0) {
+                    src = base64;
+                }
+
+                var options = {
+                    url: {
+                        label: 'URL',
+                        value: src,
+                        required: true
+                    },
+                    alt: {
+                        label: t.lang.description,
+                        value: $img.attr('alt')
+                    }
+                };
+
+                if (t.o.imageWidthModalEdit) {
+                    options.width = {
+                        value: $img.attr('width') ? $img.attr('width') : ''
+                    };
+                }
+
+                t.openModalInsert(t.lang.insertImage, options, function (v) {
+                    if (v.src !== base64) {
+                        $img.attr({
+                            src: v.url
+                        });
+                    }
+                    $img.attr({
+                        alt: v.alt
+                    });
+
+                    if (t.o.imageWidthModalEdit) {
+                        if (parseInt(v.width) > 0) {
+                            $img.attr({
+                                width: v.width
+                            });
+                        } else {
+                            $img.removeAttr('width');
+                        }
+                    }
+
+                    return true;
+                });
+                return false;
+            };
+        },
 
         // Range management
         saveRange: function () {
@@ -1467,7 +1749,7 @@ jQuery.trumbowyg = {
         updateButtonPaneStatus: function () {
             var t = this,
                 prefix = t.o.prefix,
-                tags = t.getTagsRecursive(t.doc.getSelection().focusNode.parentNode),
+                tags = t.getTagsRecursive(t.doc.getSelection().focusNode),
                 activeClasses = prefix + 'active-button ' + prefix + 'active';
 
             $('.' + prefix + 'active-button', t.$btnPane).removeClass(activeClasses);
@@ -1489,7 +1771,13 @@ jQuery.trumbowyg = {
         },
         getTagsRecursive: function (element, tags) {
             var t = this;
-            tags = tags || [];
+            tags = tags || (element && element.tagName ? [element.tagName] : []);
+
+            if (element && element.parentNode) {
+                element = element.parentNode;
+            } else {
+                return tags;
+            }
 
             var tag = element.tagName;
             if (tag === 'DIV') {
@@ -1505,7 +1793,9 @@ jQuery.trumbowyg = {
 
             tags.push(tag);
 
-            return t.getTagsRecursive(element.parentNode, tags);
+            return t.getTagsRecursive(element, tags).filter(function (tag) {
+                return tag != null;
+            });
         },
 
         // Plugins

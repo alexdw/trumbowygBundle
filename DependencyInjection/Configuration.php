@@ -26,7 +26,7 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('include_jquery')->defaultTrue()->end()
                 ->scalarNode('base_path')->defaultValue('/bundles/alexdwtrumbowyg/')->end()
                 ->scalarNode('svg_path')->defaultValue('/bundles/alexdwtrumbowyg/ui/icons.svg')->end()
-                ->scalarNode('jquery_path')->defaultValue('/bundles/alexdwtrumbowyg/vendor/jquery-2.2.4.min.js')->end()
+                ->scalarNode('jquery_path')->defaultValue('/bundles/alexdwtrumbowyg/vendor/jquery-3.2.1.min.js')->end()
                 ->scalarNode('language')->defaultValue('en')->end()
                 ->booleanNode('remove_format_pasted')->defaultFalse()->end()
                 ->booleanNode('autogrow')->defaultFalse()->end()

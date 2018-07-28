@@ -1,5 +1,5 @@
 /* ===========================================================
- * trumbowyg.colors.js v1.1
+ * trumbowyg.colors.js v1.2
  * Colors picker plugin for Trumbowyg
  * http://alex-d.github.com/Trumbowyg
  * ===========================================================
@@ -26,6 +26,10 @@
                 foreColor: 'Couleur du texte',
                 backColor: 'Couleur de fond'
             },
+            nl: {
+                foreColor: 'Tekstkleur',
+                backColor: 'Achtergrondkleur'
+            },
             sk: {
                 foreColor: 'Farba textu',
                 backColor: 'Farba pozadia'
@@ -33,9 +37,22 @@
             zh_cn: {
                 foreColor: '文字颜色',
                 backColor: '背景颜色'
+            },
+            ru: {
+                foreColor: 'Цвет текста',
+                backColor: 'Цвет выделения текста'
+            },
+            ja: {
+                foreColor: '文字色',
+                backColor: '背景色'
+            },
+            tr: {
+                foreColor: 'Yazı rengi',
+                backColor: 'Arkaplan rengi'
             }
         }
     });
+
     // jshint camelcase:true
 
 
@@ -56,6 +73,10 @@
 
     function colorTagHandler(element, trumbowyg) {
         var tags = [];
+
+        if (!element.style) {
+            return tags;
+        }
 
         // background color
         if (element.style.backgroundColor !== '') {
@@ -94,7 +115,7 @@
         plugins: {
             color: {
                 init: function (trumbowyg) {
-                    trumbowyg.o.plugins.colors = $.extend(true, {}, defaultOptions, trumbowyg.o.plugins.colors || {});
+                    trumbowyg.o.plugins.colors = trumbowyg.o.plugins.colors || defaultOptions;
                     var foreColorBtnDef = {
                             dropdown: buildDropdown('foreColor', trumbowyg)
                         },

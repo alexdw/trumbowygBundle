@@ -80,7 +80,7 @@ $builder->add('field', TrumbowygType::class, array(
       semantic: false
       remove_format_pasted: false
       include_jquery: true
-      jquery_path: /bundles/alexdwtrumbowyg/vendor/jquery-2.2.4.min.js
+      jquery_path: /bundles/alexdwtrumbowyg/vendor/jquery-3.2.1.min.js
       btns:
         - ["viewHTML"]
         - ["formatting"]
