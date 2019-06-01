@@ -2,7 +2,9 @@
 
 namespace Alexdw\TrumbowygBundle\Twig;
 
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Twig\Environment;
 
 /**
  * Twig Extension for Trumbowyg support.
@@ -17,13 +19,20 @@ class TrumbowygExtension extends \Twig_Extension
     protected $container;
 
     /**
+     * @var Environment $environment
+     */
+    protected $environment;
+
+    /**
      * Initialize trumbowyg helper
      *
      * @param ContainerInterface $container
+     * @param TemplateInterface $template
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(ContainerInterface $container, Environment $environment)
     {
         $this->container = $container;
+        $this->environment = $environment;
     }
 
     /**
@@ -82,12 +91,12 @@ class TrumbowygExtension extends \Twig_Extension
         $config = array_merge($config, $options);
 
 
-        return $this->getService('templating')->render('AlexdwTrumbowygBundle:Init:js.html.twig', array(
-            'svg_path'     => $config['svg_path'],
+        return $this->environment->render('@AlexdwTrumbowyg/Init/js.html.twig', array(
+            'svg_path'      => $config['svg_path'],
             'base_path'     => $config['base_path'],
-            'language'     => $config['language'],
-            'include_jquery'     => $config['include_jquery'],
-            'jquery_path'     => $config['jquery_path'],
+            'language'      => $config['language'],
+            'include_jquery'=> $config['include_jquery'],
+            'jquery_path'   => $config['jquery_path'],
         ));
 
 
@@ -100,8 +109,8 @@ class TrumbowygExtension extends \Twig_Extension
     public function trumbowygCss()
     {
         $config = $this->getParameter('alexdw_trumbowyg.config');
-        return $this->getService('templating')->render('AlexdwTrumbowygBundle:Init:css.html.twig', array(
-            'base_path'     => $config['base_path'],
+        return $this->environment->render('@AlexdwTrumbowyg/Init/css.html.twig', array(
+            'base_path' => $config['base_path'],
         ));
     }
 
