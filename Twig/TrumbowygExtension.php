@@ -5,13 +5,15 @@ namespace Alexdw\TrumbowygBundle\Twig;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Twig\Environment;
+use Twig_Extension;
+use Twig_SimpleFunction;
 
 /**
  * Twig Extension for Trumbowyg support.
  *
  * @author Álex Martín <alex@alexdw.com>
  */
-class TrumbowygExtension extends \Twig_Extension
+class TrumbowygExtension extends Twig_Extension
 {
     /**
      * @var ContainerInterface $container Container interface
@@ -27,7 +29,7 @@ class TrumbowygExtension extends \Twig_Extension
      * Initialize trumbowyg helper
      *
      * @param ContainerInterface $container
-     * @param TemplateInterface $template
+     * @param Environment $environment
      */
     public function __construct(ContainerInterface $container, Environment $environment)
     {
@@ -67,12 +69,12 @@ class TrumbowygExtension extends \Twig_Extension
     public function getFunctions()
     {
         return array(
-            'trumbowyg_js' => new \Twig_SimpleFunction(
+            'trumbowyg_js' => new Twig_SimpleFunction(
                 'trumbowyg_js',
                 array($this, 'trumbowygJs'),
                 array('is_safe' => array('html'))
             ),
-            'trumbowyg_css' => new \Twig_SimpleFunction(
+            'trumbowyg_css' => new Twig_SimpleFunction(
                 'trumbowyg_css',
                 array($this, 'trumbowygCss'),
                 array('is_safe' => array('html'))
@@ -101,9 +103,9 @@ class TrumbowygExtension extends \Twig_Extension
 
 
     }
+
     /**
      * Trumbowyg JS init
-     * @param array $options
      * @return string
      */
     public function trumbowygCss()
