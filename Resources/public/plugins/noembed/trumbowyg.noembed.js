@@ -20,18 +20,26 @@
     $.extend(true, $.trumbowyg, {
         langs: {
             en: {
-                noembed: 'noEmbed',
+                noembed: 'Noembed',
                 noembedError: 'Error'
             },
             sk: {
                 noembedError: 'Chyba'
             },
             fr: {
-                noembed: 'noEmbed',
                 noembedError: 'Erreur'
             },
             cs: {
                 noembedError: 'Chyba'
+            },
+            ru: {
+                noembedError: 'Ошибка'
+            },
+            ja: {
+                noembedError: 'エラー'
+            },
+            tr: {
+                noembedError: 'Hata'
             }
         },
 
@@ -65,7 +73,7 @@
 
                                         success: trumbowyg.o.plugins.noembed.success || function (data) {
                                             if (data.html) {
-                                                trumbowyg.execCmd('insertHTML', $(data.html).unwrap().html());
+                                                trumbowyg.execCmd('insertHTML', data.html);
                                                 setTimeout(function () {
                                                     trumbowyg.closeModal();
                                                 }, 250);
