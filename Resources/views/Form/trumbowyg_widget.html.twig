@@ -1,5 +1,5 @@
 {% block trumbowyg_widget %}
-    {% spaceless %}
+    {% apply spaceless %}
         <textarea {{ block('widget_attributes') }}>{{ value }}</textarea>
         <script type="text/javascript">
             trumbowyg_instances = ( typeof trumbowyg_instances != 'undefined' && trumbowyg_instances instanceof Array ) ? trumbowyg_instances : []
@@ -17,5 +17,5 @@
             trumbowyg_instances.push(instance_data);
 
         </script>
-    {% endspaceless %}
+    {% endapply %}
 {% endblock trumbowyg_widget %}
