@@ -13,15 +13,14 @@
         "MIT"
     ],
     "require" : {
-        "symfony/framework-bundle": "^2.8 || ^3.0 || ^4.0"
+        "symfony/framework-bundle": "^2.8 || ^3.0 || ^4.0",
+        "twig/twig": "^1.34|^2.4"
     },
     "autoload" : {
         "psr-4" : {
             "Alexdw\\TrumbowygBundle\\" : ""
         }
     },
-    "repositories" : [{
-    }],
     "minimum-stability": "dev",
     "extra" : {
         "branch-alias" : {
