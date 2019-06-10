@@ -5,8 +5,8 @@ namespace Alexdw\TrumbowygBundle\Twig;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Twig\Environment;
-use Twig_Extension;
-use Twig_SimpleFunction;
+use Twig\Extension\AbstractExtension as Twig_Extension;
+use Twig\TwigFunction;
 
 /**
  * Twig Extension for Trumbowyg support.
@@ -69,12 +69,12 @@ class TrumbowygExtension extends Twig_Extension
     public function getFunctions()
     {
         return array(
-            'trumbowyg_js' => new Twig_SimpleFunction(
+            'trumbowyg_js' => new TwigFunction(
                 'trumbowyg_js',
                 array($this, 'trumbowygJs'),
                 array('is_safe' => array('html'))
             ),
-            'trumbowyg_css' => new Twig_SimpleFunction(
+            'trumbowyg_css' => new TwigFunction(
                 'trumbowyg_css',
                 array($this, 'trumbowygCss'),
                 array('is_safe' => array('html'))
