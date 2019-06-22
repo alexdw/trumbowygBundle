@@ -31,7 +31,7 @@ class AlexdwTrumbowygExtension extends Extension
         $container->setParameter('alexdw_trumbowyg.form.type.class', $config['class']);
         $container->setParameter('twig.form.resources', array_merge(
             $container->getParameter('twig.form.resources'),
-            array('AlexdwTrumbowygBundle:Form:trumbowyg_widget.html.twig')
+            array('@AlexdwTrumbowyg/Form/trumbowyg_widget.html.twig')
         ));
 
         $config['base_path'] = ltrim($config['base_path'], '/');
