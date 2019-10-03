@@ -6,7 +6,7 @@ services:
           - { name: form.type }
     alexdw_trumbowyg.twig_extension:
             class: Alexdw\TrumbowygBundle\Twig\TrumbowygExtension
-            arguments: ["@service_container"]
             public: false
+            autowire: true
             tags:
                 - { name: twig.extension }
