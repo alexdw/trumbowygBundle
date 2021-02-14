@@ -32,7 +32,9 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('autogrow')->defaultFalse()->end()
                 ->booleanNode('reset_css')->defaultFalse()->end()
                 ->booleanNode('semantic')->defaultFalse()->end()
+                ->variableNode('btns_def')->defaultValue(array())->end()
                 ->variableNode('btns')->defaultValue($this->defaultConfig())->end()
+                ->variableNode('plugins')->defaultValue(array())->end()
             ->end();
 
         return $treeBuilder;

@@ -39,6 +39,7 @@ class AlexdwTrumbowygExtension extends Extension
         $container->setParameter('alexdw_trumbowyg.trumbowyg.base_path', $config['base_path']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.svg_path', $config['svg_path']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.language', $config['language']);
+        $container->setParameter('alexdw_trumbowyg.trumbowyg.btns_def', $config['btns_def']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.btns', $config['btns']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.remove_format_pasted', $config['remove_format_pasted']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.autogrow', $config['autogrow']);
@@ -46,6 +47,7 @@ class AlexdwTrumbowygExtension extends Extension
         $container->setParameter('alexdw_trumbowyg.trumbowyg.semantic', $config['semantic']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.include_jquery', $config['include_jquery']);
         $container->setParameter('alexdw_trumbowyg.trumbowyg.jquery_path', $config['jquery_path']);
+        $container->setParameter('alexdw_trumbowyg.trumbowyg.plugins', $config['plugins']);
 
         if (Kernel::VERSION_ID < 30000) {
             // BC - Add alias if Symfony < 3.0

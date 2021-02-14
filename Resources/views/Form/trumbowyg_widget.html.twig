@@ -6,10 +6,12 @@
             var options = {};
             options['lang'] = '{{ language }}';
             options['removeformatPasted'] = '{{ remove_format_pasted }}';
+            options['plugins'] = {{ plugins | json_encode | raw }};
             options['autogrow'] = '{{ autogrow ? "true":"false"}}';
             options['semantic'] = '{{ semantic ? "true":"false"}}';
             options['resetCss'] = '{{ reset_css ? "true":"false"}}';
             options['removeformatPasted'] = '{{ remove_format_pasted ? "true":"false"}}';
+            options['btnsDef'] = {{ btns_def | json_encode | raw }};
             options['btns'] = {{ btns | json_encode | raw }};
 
             var instance_data = {id: '{{ id }}', options: options};
